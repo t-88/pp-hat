@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "pphat.h": "c"
+        "pphat.h": "c",
+        "time.h": "c"
     }
 }

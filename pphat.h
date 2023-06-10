@@ -13,7 +13,7 @@
 
 typedef struct {
     size_t id;
-    char* key;
+    const  char* key;
     int value;
 } Entry; 
 
@@ -27,20 +27,19 @@ typedef struct {
 PpHat* pphat_create_opt(size_t capacity,size_t count);
 PpHat* pphat_create();  
 void pphat_free(PpHat* table); 
-void pphat_insert(PpHat** table,char* name,int value);
+void pphat_insert(PpHat** table,const char* name,int value);
 size_t pphat_get_hash(const char* id);
 size_t pphat_fnv(const char* id);
 void pphat_print(const PpHat* table);
 PpHat* pphat_resize(PpHat* table);
 
-void pphat_remove();  
-void pphat_get();     
-void pphat_contains();
-void pphat_clear();   
+void pphat_remove(const PpHat* table,const char* key);  
+int pphat_get(const PpHat* table,const char* key);     
+bool pphat_contains(const PpHat* table,const char* key);
 
 
 //TODO: use string intering  
-bool pphat_str_eq(char* str1,char* str2) {
+bool pphat_str_eq(const char* str1,const  char* str2) {
     size_t len1 = strlen(str1);
     size_t len2 = strlen(str2);
     return (len1 == len2) && (memcmp(str1,str2,len1) == 0);
@@ -50,6 +49,12 @@ bool pphat_str_eq(char* str1,char* str2) {
 PpHat* pphat_create_opt(size_t capacity,size_t count) {
     PpHat* table  = (PpHat*) calloc(1,sizeof(PpHat));
     table->entries = (Entry*) calloc(capacity,sizeof(Entry));
+
+    for (size_t i = 0; i < capacity; i++){
+        table->entries[i].value = 0;
+    }
+    
+
     table->capaciy = capacity;
     table->count = count;
     return table;
@@ -70,7 +75,7 @@ void pphat_free(PpHat* table) {
 }
 
 
-void pphat_insert(PpHat** table,char* key,int value) {    
+void pphat_insert(PpHat** table,const char* key,int value) {    
     if((*table)->count + 1 >= (*table)->capaciy * LOAD_FACTOR) {
         (*table) = pphat_resize(*table);
     }
@@ -80,9 +85,11 @@ void pphat_insert(PpHat** table,char* key,int value) {
     
     while (1) {
         if((*table)->entries[idx].key == NULL) {
-            (*table)->entries[idx].value = value;
+            if((*table)->entries[idx].value == 0) {
+                (*table)->count++;
+            }
             (*table)->entries[idx].key = key;
-            (*table)->count++;
+            (*table)->entries[idx].value = value;
             break;
         } else if(pphat_str_eq(key,(*table)->entries[idx].key)){
             (*table)->entries[idx].value = value;
@@ -122,6 +129,65 @@ size_t pphat_fnv(const char* id) {
     }
     return hash;
 }
+
+
+int pphat_get(const PpHat* table,const char* key) {
+    if(table->count  == 0) {
+        return 0;
+    }   
+
+    size_t id = pphat_get_hash(key);
+    size_t idx = id % table->capaciy; 
+    
+    while (1) {
+        if(table->entries[idx].key == NULL) {
+            return 0;
+            break;
+        } else if(pphat_str_eq(key,table->entries[idx].key)){
+            return table->entries[idx].value;
+            break;
+        }
+        idx = (idx + 1) % table->capaciy;
+    }
+}     
+
+bool pphat_contains(const PpHat* table,const char* key) {
+      if(table->count  == 0) {
+        return false;
+    }   
+
+    size_t id = pphat_get_hash(key);
+    size_t idx = id % table->capaciy; 
+    
+    while (1) {
+        if(table->entries[idx].key == NULL) {
+            return false;
+            break;
+        } else if(pphat_str_eq(key,table->entries[idx].key)){
+            return true;
+            break;
+        }
+        idx = (idx + 1) % table->capaciy;
+    }  
+}
+void pphat_remove(const PpHat* table,const char* key) {
+    if(table->count  == 0) {
+        return;
+    }   
+
+    size_t id = pphat_get_hash(key);
+    size_t idx = id % table->capaciy; 
+    while (1) {
+        if(table->entries[idx].key == NULL) {
+            return;
+        } else if(pphat_str_eq(key,table->entries[idx].key)){
+            table->entries[idx].value = 1;
+            table->entries[idx].key = NULL;
+            return;
+        }
+        idx = (idx + 1) % table->capaciy;
+    }
+}  
 
 
 void pphat_print(const PpHat* table) {
