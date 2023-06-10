@@ -40,9 +40,7 @@ bool pphat_contains(const PpHat* table,const char* key);
 
 //TODO: use string intering  
 bool pphat_str_eq(const char* str1,const  char* str2) {
-    size_t len1 = strlen(str1);
-    size_t len2 = strlen(str2);
-    return (len1 == len2) && (memcmp(str1,str2,len1) == 0);
+    return strcmp(str1,str2) == 0;
 }   
 
 
