@@ -1,5 +1,6 @@
 # pp-hat
-short for personal portable hash table, its a hash table c header library implementation   
+short for personal portable hash table, its a hash table c header library implementation         
+**dont use it**
 
 ## Functions
     * PpHat* pphat_create();  
